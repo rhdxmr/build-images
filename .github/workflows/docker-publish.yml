@@ -14,7 +14,7 @@ on:
   pull_request:
 
 env:
-  IMAGE_NAME: ingraind-build
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/ingraind-build
 
 jobs:
   # Run tests.
@@ -27,27 +27,39 @@ jobs:
 
       - name: Build Ubuntu 20.04
         run: |
-            docker build --no-cache \
-                         -f Dockerfile.20.04 \
-                         .
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          [ "$VERSION" == "master" ] && VERSION=latest
+          VERSION=$VERSION-ubuntu-20.04
 
-            docker tag $IMAGE_NAME:$VERSION-ubuntu20.04 $IMAGE_ID:$VERSION
+          docker build --no-cache \
+                       -f Dockerfile.20.04 \
+                       -t $IMAGE_NAME:$VERSION \
+                       .
 
       - name: Build Ubuntu 18.04
         run: |
-            docker build --no-cache \
-                         -f Dockerfile.18.04 \
-                         .
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          [ "$VERSION" == "master" ] && VERSION=latest
+          VERSION=$VERSION-ubuntu-18.04
 
-            docker tag $IMAGE_NAME:$VERSION-ubuntu20.04 $IMAGE_ID:$VERSION
+          docker build --no-cache \
+                       -f Dockerfile.18.04 \
+                       -t $IMAGE_NAME:$VERSION \
+                       .
 
       - name: Build Fedora Rawhide
         run: |
-            docker build --no-cache \
-                         -f Dockerfile.rawhide \
-                         .
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          [ "$VERSION" == "master" ] && VERSION=latest
+          VERSION=$VERSION-fedora-rawhide
 
-            docker tag $IMAGE_NAME:$VERSION-rawhide $IMAGE_ID:$VERSION
+          docker build --no-cache \
+                       -f Dockerfile.rawhide \
+                       -t $IMAGE_NAME:$VERSION \
+                       .
             
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
@@ -66,22 +78,4 @@ jobs:
 
       - name: Push image
         run: |
-          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
-
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
-
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
