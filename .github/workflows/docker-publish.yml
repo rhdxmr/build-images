@@ -2,9 +2,8 @@ name: Docker
 
 on:
   push:
-    # Publish `master` as Docker `latest` image.
     branches:
-      - master
+      - main
 
     # Publish `v1.2.3` tags as releases.
     tags:
@@ -15,6 +14,7 @@ on:
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/ingraind-build
+  MAIN_BRANCH: main
 
 jobs:
   # Run tests.
@@ -32,7 +32,7 @@ jobs:
         run: |
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-          [ "$VERSION" == "master" ] && VERSION=latest
+          [ "$VERSION" == "${{ env.MAIN_BRANCH }}" ] && VERSION=latest
 
           echo "version=$VERSION" >> $GITHUB_ENV
 
