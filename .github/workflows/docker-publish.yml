@@ -65,7 +65,7 @@ jobs:
           VERSION=${{ env.version }}-fedora-rawhide
 
           docker build --no-cache \
-                       -f Dockerfile.rawhide \
+                       -f Dockerfile.fedora \
                        -t $IMAGE_NAME:$VERSION \
                        .
 
