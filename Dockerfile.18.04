@@ -10,8 +10,8 @@ RUN apt-get update \
     && apt-get -y install curl wget lsb-release wget software-properties-common \
     && bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" \
     && apt-get update \
-    && apt-get -y install debhelper cmake llvm libllvm11 llvm-11-dev libclang-11-dev \
-       libelf-dev bison flex libedit-dev clang-format-11 python python-netaddr \
+    && apt-get -y install debhelper cmake llvm libllvm12 llvm-12-dev libclang-12-dev \
+       libelf-dev bison flex libedit-dev clang-format-12 python python-netaddr \
        python-pyroute2 luajit libluajit-5.1-dev arping iperf netperf ethtool \
        devscripts zlib1g-dev libfl-dev \
        pkg-config libssl-dev \
