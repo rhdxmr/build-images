@@ -6,11 +6,11 @@ ENV RUSTUP_HOME=/usr/local/rustup \
     PATH=/usr/local/cargo/bin:$PATH \
     DEBIAN_FRONTEND=noninteractive
 
-RUN yum install -y clang-11.0.0 \
-	llvm-11.0.0 \
-	llvm-libs-11.0.0 \
-	llvm-devel-11.0.0 \
-	llvm-static-11.0.0 \
+RUN yum install -y clang-12.0.0 \
+	llvm-12.0.0 \
+	llvm-libs-12.0.0 \
+	llvm-devel-12.0.0 \
+	llvm-static-12.0.0 \
 	kernel \
 	kernel-devel \
 	elfutils-libelf-devel \
@@ -33,7 +33,7 @@ RUN curl https://sh.rustup.rs -sSf > rustup.sh \
     && rustup --version \
     && cargo --version \
     && rustc --version \
-    && cargo install bindgen rsign2
+    && cargo install bindgen 
 
 RUN echo "Building OpenSSL" \
     && VERS=1.0.2p \
