@@ -17,13 +17,8 @@ env:
   MAIN_BRANCH: main
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
-    outputs:
-      ubuntu2004: ${{ steps.ubuntu2004.outputs.image_id }}
-      ubuntu1804: ${{ steps.ubuntu1804.outputs.image_id }}
-      rawhide: ${{ steps.rawhide.outputs.image_id }}
-
     steps:
       - uses: actions/checkout@v2
 
@@ -32,58 +27,44 @@ jobs:
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
           [ "$VERSION" == "$MAIN_BRANCH" ] && VERSION=latest
-
           echo "version=$VERSION" >> $GITHUB_ENV
 
       - name: Build Ubuntu 20.04
         id: ubuntu2004
         run: |
-          TAG=$IMAGE_NAME:${{ env.version }}-ubuntu-20.04
-
+          VERSION=${{ env.version }}-ubuntu-20.04
           docker build --no-cache \
                        -f Dockerfile.20.04 \
-                       -t $TAG \
+                       -t $IMAGE_NAME:$VERSION \
                        .
-
-          echo "::set-output name=image_id::$TAG"
+          echo "::set-output name=image_id::$IMAGE_NAME:$VERSION"
 
       - name: Build Ubuntu 18.04
         id: ubuntu1804
         run: |
-          TAG=$IMAGE_NAME:${{ env.version }}-ubuntu-18.04
-
+          VERSION=${{ env.version }}-ubuntu-18.04
           docker build --no-cache \
                        -f Dockerfile.18.04 \
-                       -t $TAG \
+                       -t $IMAGE_NAME:$VERSION \
                        .
-
-          echo "::set-output name=image_id::$TAG"
+          echo "::set-output name=image_id::$IMAGE_NAME:$VERSION"
 
       - name: Build Fedora Rawhide
         id: rawhide
         run: |
-          TAG=$IMAGE_NAME:${{ env.version }}-fedora-rawhide
-
+          VERSION=${{ env.version }}-fedora-rawhide
           docker build --no-cache \
                        -f Dockerfile.fedora \
-                       -t $TAG \
+                       -t $IMAGE_NAME:$VERSION \
                        .
+          echo "::set-output name=image_id::$IMAGE_NAME:$VERSION"
 
-          echo "::set-output name=image_id::$TAG"
-
-            
-  push:
-    needs: build
-
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-
-    steps:
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Push image
+        if: github.event_name == 'push'
         run: |
-          docker push ${{ needs.build.outputs.ubuntu2004 }}
-          docker push ${{ needs.build.outputs.ubuntu1804 }}
-          docker push ${{ needs.build.outputs.rawhide }}
+          docker push ${{ steps.ubuntu2004.outputs.image_id }}
+          docker push ${{ steps.ubuntu1804.outputs.image_id }}
+          docker push ${{ steps.rawhide.outputs.image_id }}
