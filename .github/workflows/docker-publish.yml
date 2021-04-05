@@ -50,7 +50,7 @@ jobs:
       - name: Build Ubuntu 18.04
         id: ubuntu1804
         run: |
-          VERSION=$IMAGE_NAME:${{ env.version }}-ubuntu-18.04
+          TAG=$IMAGE_NAME:${{ env.version }}-ubuntu-18.04
 
           docker build --no-cache \
                        -f Dockerfile.18.04 \
@@ -62,7 +62,7 @@ jobs:
       - name: Build Fedora Rawhide
         id: rawhide
         run: |
-          VERSION=$IMAGE_NAME:${{ env.version }}-fedora-rawhide
+          TAG=$IMAGE_NAME:${{ env.version }}-fedora-rawhide
 
           docker build --no-cache \
                        -f Dockerfile.fedora \
