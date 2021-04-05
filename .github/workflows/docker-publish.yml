@@ -38,38 +38,38 @@ jobs:
       - name: Build Ubuntu 20.04
         id: ubuntu2004
         run: |
-          VERSION=${{ env.version }}-ubuntu-20.04
+          TAG=$IMAGE_NAME:${{ env.version }}-ubuntu-20.04
 
           docker build --no-cache \
                        -f Dockerfile.20.04 \
-                       -t $IMAGE_NAME:$VERSION \
+                       -t $TAG \
                        .
 
-          echo "::set-output name=image_id::$VERSION"
+          echo "::set-output name=image_id::$TAG"
 
       - name: Build Ubuntu 18.04
         id: ubuntu1804
         run: |
-          VERSION=${{ env.version }}-ubuntu-18.04
+          VERSION=$IMAGE_NAME:${{ env.version }}-ubuntu-18.04
 
           docker build --no-cache \
                        -f Dockerfile.18.04 \
-                       -t $IMAGE_NAME:$VERSION \
+                       -t $TAG \
                        .
 
-          echo "::set-output name=image_id::$VERSION"
+          echo "::set-output name=image_id::$TAG"
 
       - name: Build Fedora Rawhide
         id: rawhide
         run: |
-          VERSION=${{ env.version }}-fedora-rawhide
+          VERSION=$IMAGE_NAME:${{ env.version }}-fedora-rawhide
 
           docker build --no-cache \
                        -f Dockerfile.fedora \
-                       -t $IMAGE_NAME:$VERSION \
+                       -t $TAG \
                        .
 
-          echo "::set-output name=image_id::$VERSION"
+          echo "::set-output name=image_id::$TAG"
 
             
   push:
@@ -86,6 +86,6 @@ jobs:
 
       - name: Push image
         run: |
-          docker push ${{ needs.build.outputs.ubuntu2004.image_id }}
-          docker push ${{ needs.build.outputs.ubuntu1804.image_id }}
-          docker push ${{ needs.build.outputs.rawhide.image_id }}
+          docker push ${{ needs.build.outputs.ubuntu2004 }}
+          docker push ${{ needs.build.outputs.ubuntu1804 }}
+          docker push ${{ needs.build.outputs.rawhide }}
