@@ -13,7 +13,7 @@ on:
   pull_request:
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/ingraind-build
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/foniod-build
   MAIN_BRANCH: main
 
 jobs:
@@ -28,6 +28,16 @@ jobs:
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
           [ "$VERSION" == "$MAIN_BRANCH" ] && VERSION=latest
           echo "version=$VERSION" >> $GITHUB_ENV
+
+      - name: Build Ubuntu 21.04
+        id: ubuntu2104
+        run: |
+          VERSION=${{ env.version }}-ubuntu-21.04
+          docker build --no-cache \
+                       -f Dockerfile.21.04 \
+                       -t $IMAGE_NAME:$VERSION \
+                       .
+          echo "::set-output name=image_id::$IMAGE_NAME:$VERSION"
 
       - name: Build Ubuntu 20.04
         id: ubuntu2004
@@ -49,12 +59,22 @@ jobs:
                        .
           echo "::set-output name=image_id::$IMAGE_NAME:$VERSION"
 
-      - name: Build Fedora Rawhide
-        id: rawhide
+      - name: Build Fedora 34
+        id: fedora34
         run: |
-          VERSION=${{ env.version }}-fedora-rawhide
+          VERSION=${{ env.version }}-fedora-34
           docker build --no-cache \
-                       -f Dockerfile.fedora \
+                       -f Dockerfile.fedora-34 \
+                       -t $IMAGE_NAME:$VERSION \
+                       .
+          echo "::set-output name=image_id::$IMAGE_NAME:$VERSION"
+
+      - name: Build Alpine 3.14
+        id: alpine314
+        run: |
+          VERSION=${{ env.version }}-alpine
+          docker build --no-cache \
+                       -f Dockerfile.alpine \
                        -t $IMAGE_NAME:$VERSION \
                        .
           echo "::set-output name=image_id::$IMAGE_NAME:$VERSION"
@@ -65,6 +85,8 @@ jobs:
       - name: Push image
         if: github.event_name == 'push'
         run: |
+          docker push ${{ steps.ubuntu2104.outputs.image_id }}
           docker push ${{ steps.ubuntu2004.outputs.image_id }}
           docker push ${{ steps.ubuntu1804.outputs.image_id }}
-          docker push ${{ steps.rawhide.outputs.image_id }}
+          docker push ${{ steps.fedora34.outputs.image_id }}
+          docker push ${{ steps.alpine314.outputs.image_id }}

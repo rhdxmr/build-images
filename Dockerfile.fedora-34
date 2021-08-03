@@ -1,4 +1,4 @@
-FROM fedora:rawhide
+FROM fedora:34
 
 ARG openssl_arch=linux-x86_64
 ENV RUSTUP_HOME=/usr/local/rustup \
@@ -6,7 +6,7 @@ ENV RUSTUP_HOME=/usr/local/rustup \
     PATH=/usr/local/cargo/bin:$PATH \
     DEBIAN_FRONTEND=noninteractive
 
-RUN yum install -y clang-12.0.0 \
+RUN dnf install -y clang-12.0.0 \
 	llvm-12.0.0 \
 	llvm-libs-12.0.0 \
 	llvm-devel-12.0.0 \
@@ -20,7 +20,7 @@ RUN yum install -y clang-12.0.0 \
 	capnproto \
 	dnf-utils \
 	git \
-	make makedepend
+	make makedepend zstd bzip2
 
 RUN curl https://sh.rustup.rs -sSf > rustup.sh \
     && sh rustup.sh -y \
@@ -33,7 +33,7 @@ RUN curl https://sh.rustup.rs -sSf > rustup.sh \
     && rustup --version \
     && cargo --version \
     && rustc --version \
-    && cargo install bindgen 
+    && cargo install bindgen
 
 RUN echo "Building OpenSSL" \
     && VERS=1.0.2p \
