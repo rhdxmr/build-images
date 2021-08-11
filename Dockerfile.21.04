@@ -8,7 +8,7 @@ ENV RUSTUP_HOME=/usr/local/rustup \
 
 RUN apt-get update \
     && apt-get -y install curl wget lsb-release wget software-properties-common \
-    && bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" \
+    && wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 12 && rm -f ./llvm.sh \
     && apt-get update \
     && apt-get -y install debhelper cmake llvm libllvm12 llvm-12-dev libclang-12-dev \
        libelf-dev bison flex libedit-dev clang-format-12 python python3-netaddr \
@@ -34,7 +34,8 @@ RUN curl https://sh.rustup.rs -sSf > rustup.sh \
     && rustup --version \
     && cargo --version \
     && rustc --version \
-    && cargo install bindgen
+    && cargo install bindgen \
+    && rm -f rustup.sh
 
 RUN echo "Building OpenSSL" \
     && VERS=1.0.2p \
