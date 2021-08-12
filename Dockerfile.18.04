@@ -4,23 +4,33 @@ ARG openssl_arch=linux-x86_64
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    DEBIAN_FRONTEND=noninteractive 
+    DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-    && apt-get -y install curl wget lsb-release wget software-properties-common \
-    && bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" \
-    && apt-get update \
-    && apt-get -y install debhelper cmake llvm libllvm12 llvm-12-dev libclang-12-dev \
-       libelf-dev bison flex libedit-dev clang-format-12 python python-netaddr \
+    && apt-get -y install curl wget lsb-release wget software-properties-common debhelper cmake \
+       libelf-dev bison flex libedit-dev python python-netaddr \
        python-pyroute2 luajit libluajit-5.1-dev arping iperf netperf ethtool \
        devscripts zlib1g-dev libfl-dev \
        pkg-config libssl-dev \
        git \
-       clang \
        musl musl-tools musl-dev \
        capnproto \
-       linux-headers-generic \
+       linux-base libkmod2 kmod \
+    && wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 12 && rm -f ./llvm.sh \
+    && apt-get update && apt-get -y install llvm libllvm12 llvm-12-dev libclang-12-dev clang-format-12 clang \
     && apt-get clean -y
+
+
+# Install kernel v4.19 to check the oldest supported kernel
+WORKDIR /tmp/kernel
+RUN wget \
+    https://kernel.ubuntu.com/~kernel-ppa/mainline/v4.19.5/linux-headers-4.19.5-041905-generic_4.19.5-041905.201812031110_amd64.deb \
+    https://kernel.ubuntu.com/~kernel-ppa/mainline/v4.19.5/linux-image-unsigned-4.19.5-041905-generic_4.19.5-041905.201812031110_amd64.deb \
+    https://kernel.ubuntu.com/~kernel-ppa/mainline/v4.19.5/linux-modules-4.19.5-041905-generic_4.19.5-041905.201812031110_amd64.deb \
+    https://kernel.ubuntu.com/~kernel-ppa/mainline/v4.19.5/linux-headers-4.19.5-041905_4.19.5-041905.201812031110_all.deb
+RUN dpkg -i linux-*4.19.5*.deb
+WORKDIR /
+RUN rm -rf /tmp/kernel
 
 RUN curl https://sh.rustup.rs -sSf > rustup.sh \
     && sh rustup.sh -y \
@@ -33,7 +43,8 @@ RUN curl https://sh.rustup.rs -sSf > rustup.sh \
     && rustup --version \
     && cargo --version \
     && rustc --version \
-    && cargo install bindgen
+    && cargo install bindgen \
+    && rm -f rustup.sh
 
 RUN echo "Building OpenSSL" \
     && VERS=1.0.2p \
