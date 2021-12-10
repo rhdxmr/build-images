@@ -35,7 +35,7 @@ COPY extract-btf-aarch64.rs .
 
 RUN if [ $TARGETPLATFORM = "linux/arm64" ]; then \
       rustc extract-btf-aarch64.rs \
-      && ./extract-btf-aarch64 /lib/modules/*/vmlinuz /boot/vmlinux-btf; \
+      && gzip -dc /lib/modules/*/vmlinuz | ./extract-btf-aarch64 /dev/stdin /boot/vmlinux-btf; \
     else \
       /lib/modules/*/build/scripts/extract-vmlinux /lib/modules/*/vmlinuz > /boot/vmlinux; \
     fi
