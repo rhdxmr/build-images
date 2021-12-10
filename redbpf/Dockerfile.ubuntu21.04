@@ -1,0 +1,48 @@
+FROM ubuntu:21.04
+
+ARG TARGETPLATFORM
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH \
+    DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get -y install \
+    curl \
+    build-essential \
+    libllvm12 \
+    llvm-12-dev \
+    libclang-12-dev \
+    libelf-dev \
+    linux-headers-generic
+RUN apt-get -y install \
+    "linux-image-$(ls /lib/modules)" \
+    && apt-get clean -y
+
+RUN ln -s /usr/bin/llvm-config-12 /usr/bin/llvm-config
+RUN llvm-config --version | grep -q '^12'
+
+# RedBPF depends on LLVM12 by default and Rust v1.52~v1.55 uses LLVM12
+# cf) RedBPF can rely on LLVM13 and Rust v1.56~ uses LLVM13
+RUN curl https://sh.rustup.rs -sSf > rustup.sh \
+    && sh rustup.sh -y \
+          --default-toolchain 1.55 \
+          --profile minimal \
+          --no-modify-path \
+    && rm -f rustup.sh \
+    && rustup component add rustfmt \
+    && rustup --version \
+    && cargo -vV \
+    && rustc -vV
+
+COPY extract-btf-aarch64.rs .
+
+RUN if [ $TARGETPLATFORM = "linux/arm64" ]; then \
+      rustc extract-btf-aarch64.rs \
+      && gzip -dc /boot/vmlinuz | ./extract-btf-aarch64 /dev/stdin /boot/vmlinux-btf; \
+    else \
+      /lib/modules/*/build/scripts/extract-vmlinux /boot/vmlinuz > /boot/vmlinux; \
+    fi
+RUN rm -f extract-btf-aarch64.rs
+
+WORKDIR /build

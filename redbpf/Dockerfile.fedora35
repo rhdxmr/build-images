@@ -1,0 +1,44 @@
+FROM fedora:35
+
+ARG TARGETPLATFORM
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+
+RUN dnf install -y \
+    clang-13.0.0 \
+	llvm-13.0.0 \
+	llvm-libs-13.0.0 \
+	llvm-devel-13.0.0 \
+	llvm-static-13.0.0 \
+	kernel \
+	kernel-devel \
+	elfutils-libelf-devel \
+	make \
+    zstd
+
+RUN llvm-config --version | grep -q '^13'
+
+# RedBPF can rely on LLVM13 and Rust v1.56~ uses LLVM13
+RUN curl https://sh.rustup.rs -sSf > rustup.sh \
+    && sh rustup.sh -y \
+          --default-toolchain 1.57 \
+          --profile minimal \
+          --no-modify-path \
+    && rm -f rustup.sh \
+    && rustup component add rustfmt \
+    && rustup --version \
+    && cargo -vV \
+    && rustc -vV
+
+COPY extract-btf-aarch64.rs .
+
+RUN if [ $TARGETPLATFORM = "linux/arm64" ]; then \
+      rustc extract-btf-aarch64.rs \
+      && ./extract-btf-aarch64 /lib/modules/*/vmlinuz /boot/vmlinux-btf; \
+    else \
+      /lib/modules/*/build/scripts/extract-vmlinux /lib/modules/*/vmlinuz > /boot/vmlinux; \
+    fi
+RUN rm -f extract-btf-aarch64.rs
+
+WORKDIR /build
