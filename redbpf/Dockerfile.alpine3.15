@@ -1,0 +1,39 @@
+FROM alpine:3.15
+
+ARG TARGETPLATFORM
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+
+RUN apk add --no-cache \
+    curl \
+    linux-headers \
+    build-base \
+    make \
+    libxml2-dev \
+    linux-lts-dev \
+    linux-lts \
+    clang-libs \
+    llvm12 \
+    llvm12-libs \
+    llvm12-dev \
+    llvm12-static
+
+RUN llvm-config --version | grep -q '^12'
+
+# RedBPF depends on LLVM12 by default and Rust v1.52~v1.55 uses LLVM12
+# cf) RedBPF can rely on LLVM13 and Rust v1.56~ uses LLVM13
+RUN curl https://sh.rustup.rs -sSf > rustup.sh \
+    && sh rustup.sh -y \
+          --default-toolchain 1.55 \
+          --profile minimal \
+          --no-modify-path \
+    && rm -f rustup.sh \
+    && rustup component add rustfmt \
+    && rustup --version \
+    && cargo -vV \
+    && rustc -vV
+
+# Can not extract vmlinux or btf from the vmlinuz image.
+
+WORKDIR /build

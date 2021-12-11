@@ -1,0 +1,34 @@
+FROM archlinux:latest
+
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+
+RUN pacman --noconfirm -Syu \
+    && pacman -S --noconfirm \
+    llvm \
+    llvm-libs \
+    libffi \
+    clang \
+    make \
+    linux-headers \
+    linux
+
+RUN llvm-config --version | grep -q '^13'
+
+# RedBPF can rely on LLVM13 and Rust v1.56~ uses LLVM13
+RUN curl https://sh.rustup.rs -sSf > rustup.sh \
+    && sh rustup.sh -y \
+          --default-toolchain 1.57 \
+          --profile minimal \
+          --no-modify-path \
+    && rm -f rustup.sh \
+    && rustup component add rustfmt \
+    && rustup --version \
+    && cargo -vV \
+    && rustc -vV
+
+RUN /lib/modules/*/build/scripts/extract-vmlinux /boot/vmlinuz-linux > /boot/vmlinux
+# archlinux does not support arm64 for docker images as of now Dec. 2021.
+
+WORKDIR /build
