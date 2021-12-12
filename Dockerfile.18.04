@@ -34,7 +34,7 @@ RUN rm -rf /tmp/kernel
 
 RUN curl https://sh.rustup.rs -sSf > rustup.sh \
     && sh rustup.sh -y \
-          --default-toolchain stable \
+          --default-toolchain 1.55 \
           --profile minimal \
           --no-modify-path \
     && rustup component add rustfmt \
